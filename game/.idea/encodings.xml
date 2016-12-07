@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="Encoding">
+    <file url="file://$PROJECT_DIR$/src/interf/EndScreen.java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/interf/LeftPanel.java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/interf/MainMenu.java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/interf/MiddleBattle.java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/interf/MiddlePanel.java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/interf/OptionsPanel.java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/interf/RightPanel.java" charset="UTF-8" />
+  </component>
+</project>
