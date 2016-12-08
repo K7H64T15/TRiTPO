@@ -1,14 +1,10 @@
 package interf;
 
-import java.io.FileNotFoundException;
-import java.io.IOException;
 import game.Defines;
 import game.FieldEvent;
 import game.FieldTrap;
 import game.FieldTreasure;
 import game.Map;
-import game.Replay;
-import game.WaitThread;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.scene.canvas.Canvas;
@@ -18,7 +14,6 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
-import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
@@ -30,16 +25,11 @@ public class MiddlePanel implements Defines, Runnable {
   protected Canvas mapCanvas;
   protected GraphicsContext graphContext;
   protected boolean moveFlag;
-  protected boolean replayFlag;
-  protected Replay replay;
   protected GameWindow gameWindow;
   protected Thread middleThread;
-  protected int botMovesNumber;
 
   public MiddlePanel(GameWindow gameWindowTmp) {
-    botMovesNumber = 0;
     gameWindow = gameWindowTmp;
-    replayFlag = false;
     middlePanel = new FlowPane(MIDDLE_PANEL_SIZE_X, MIDDLE_PANEL_SIZE_Y);
     mapCanvas = new Canvas(MIDDLE_PANEL_SIZE_X, MIDDLE_PANEL_SIZE_Y);
     map = new Map(gameWindow.difficulty);
@@ -47,65 +37,17 @@ public class MiddlePanel implements Defines, Runnable {
     drawMap();
     middlePanel.getChildren().add(mapCanvas);
     moveFlag = true;
-    try {
-      replay = new Replay("temp_replay", false);
-    } catch (FileNotFoundException noFile) {
-      noFile.printStackTrace();
-    }
-    try {
-      replay.saveMap(map);
-    } catch (IOException inputError) {
-      inputError.printStackTrace();
-    }
+
     middleThread = new Thread(this);
     middleThread.start();
   }
 
   public MiddlePanel(GameWindow gameWindow, boolean replayFlagActivate) {
-    botMovesNumber = 0;
-    replayFlag = false;
     middlePanel = new FlowPane(MIDDLE_PANEL_SIZE_X, MIDDLE_PANEL_SIZE_Y);
     mapCanvas = new Canvas(MIDDLE_PANEL_SIZE_X, MIDDLE_PANEL_SIZE_Y);
     graphContext = mapCanvas.getGraphicsContext2D();
     middlePanel.getChildren().add(mapCanvas);
     moveFlag = true;
-    replayFlag = replayFlagActivate;
-
-    if (replayFlagActivate == true) {
-      try {
-        replay = new Replay("temp_replay", false);
-      } catch (FileNotFoundException noFile) {
-        noFile.printStackTrace();
-      }
-
-      loadMap(gameWindow);
-      drawMap();
-
-      gameWindow.mainScene.setOnMouseClicked(new EventHandler<MouseEvent>() {
-        public void handle(MouseEvent drawEvent) {
-          if (replayFlag == true) {
-            replayMove(gameWindow);
-            gameWindow.left.refresh(gameWindow);
-            drawMap();
-
-            WaitThread waitThread = new WaitThread();
-            try {
-              waitThread.waitThread.join();
-            } catch (InterruptedException sleepError) {
-              sleepError.printStackTrace();
-            }
-          }
-          if (moveFlag == false) {
-            replayFlag = false;
-            return;
-          }
-        }
-      });
-    }
-  }
-  
-  public void loadMap(GameWindow gameWindow) {
-    map = new Map(gameWindow.difficulty, replay);
   }
 
   public void run() {
@@ -113,16 +55,16 @@ public class MiddlePanel implements Defines, Runnable {
       public void handle(KeyEvent moveEvent) {
         // 1 phase
         if ((moveEvent.getCode() == KeyCode.UP) && (moveFlag == true)) {
-          saveMove(MOVE_UP);
+          movePlayer(MOVE_UP);
         }
         if ((moveEvent.getCode() == KeyCode.RIGHT) && (moveFlag == true)) {
-          saveMove(MOVE_RIGHT);
+          movePlayer(MOVE_RIGHT);
         }
         if ((moveEvent.getCode() == KeyCode.DOWN) && (moveFlag == true)) {
-          saveMove(MOVE_DOWN);
+          movePlayer(MOVE_DOWN);
         }
         if ((moveEvent.getCode() == KeyCode.LEFT) && (moveFlag == true)) {
-          saveMove(MOVE_LEFT);
+          movePlayer(MOVE_LEFT);
         }
         drawMap();
         if (gameWindow.autoPlayFlag == true) {
@@ -134,11 +76,6 @@ public class MiddlePanel implements Defines, Runnable {
           case MAP_EVENT_EXIT: {
             moveFlag = false;
             EndScreen end = new EndScreen(gameWindow, 1);
-            try {
-              replay.saveEnd(true);
-            } catch (IOException inputError) {
-              inputError.printStackTrace();
-            }
             break;
           }
           case MAP_EVENT_BATTLE: {
@@ -148,192 +85,36 @@ public class MiddlePanel implements Defines, Runnable {
             MiddleBattle middleBattle = new MiddleBattle(gameWindow);
             middleBattle.drawBattle(gameWindow);
             gameWindow.left.refresh(gameWindow);
-            saveAction();
             break;
           }
           case MAP_EVENT_TRAP: {
             middlePanel.getChildren().remove(mapCanvas);
             moveFlag = false;
             drawTrap(gameWindow);
-            saveAction();
             break;
           }
           case MAP_EVENT_TREASURE: {
             middlePanel.getChildren().remove(mapCanvas);
             moveFlag = false;
             drawTreasure(gameWindow);
-            saveAction();
             break;
           }
           case MAP_EVENT_EVENT: {
             middlePanel.getChildren().remove(mapCanvas);
             moveFlag = false;
             drawEvent(gameWindow);
-            saveAction();
             break;
           }
         }
         if (map.player.getStat(PLAYER_STAT_CURRENT_HP) <= 0) {
           moveFlag = false;
           EndScreen end = new EndScreen(gameWindow, 0);// fail
-          try {
-            replay.saveEnd(false);
-          } catch (IOException inputError) {
-            inputError.printStackTrace();
-          }
         }
         map.clearField();
         gameWindow.left.refresh(gameWindow);
         drawMap();
       }
     });
-  }
-
-  void replayMove(GameWindow gameWindow) {
-    // 1 phase
-    botMovesNumber++;
-    switch (replay.loadAction()) {
-      case 'U': {// move up
-        map.changePlayerPos(MOVE_UP);
-        break;
-      }
-      case 'R': {// move up
-        map.changePlayerPos(MOVE_RIGHT);
-        break;
-      }
-      case 'L': {// move up
-        map.changePlayerPos(MOVE_LEFT);
-        break;
-      }
-      case 'D': {// move up
-        map.changePlayerPos(MOVE_DOWN);
-        break;
-      }
-      case 'W': {// win
-        gameWindow.left.refresh(gameWindow);
-        EndScreen end = new EndScreen(gameWindow, 1);
-        moveFlag = false;
-        return;
-      }
-      case 'F': {// fail
-        gameWindow.left.refresh(gameWindow);
-        EndScreen end = new EndScreen(gameWindow, 0);
-        moveFlag = false;
-        return;
-      }
-    }
-    // 2 phase
-    switch (map.startEvent()) {
-      case MAP_EVENT_BATTLE: {
-        map.player.getDamage(BOT_MONSTER_DAMAGE);
-        map.player.addExperience(BOT_EXPERIENCE_GAIN);
-        break;
-      }
-      case MAP_EVENT_TRAP: {
-        map.player.getDamage(BOT_TRAP_DAMAGE);
-        break;
-      }
-      case MAP_EVENT_TREASURE: {
-        map.player.addScore(BOT_SCORE_GAIN);
-        break;
-      }
-      case MAP_EVENT_EVENT: {
-        map.player.addScore(BOT_SCORE_GAIN);
-        break;
-      }
-    }
-    map.clearField();
-  }
-
-  void autoPlay(GameWindow gameWindow) {
-    int maximumMoves = 0;
-    while (map.player.getStat(PLAYER_STAT_CURRENT_HP) >= 0) {
-      // 1 phase
-      boolean alreadyMoved = false;
-      maximumMoves++;
-      if ((map.fields[map.playerY][map.playerX + 1].getEnabled() == true)
-          && (map.fields[map.playerY][map.playerX + 1].getVisited() == false)) {
-        if (alreadyMoved == false) {
-          saveMove(MOVE_RIGHT);
-          alreadyMoved = true;
-        }
-      }
-      if ((map.fields[map.playerY + 1][map.playerX].getEnabled() == true)
-          && (map.fields[map.playerY + 1][map.playerX].getVisited() == false)) {
-        if (alreadyMoved == false) {
-          saveMove(MOVE_DOWN);
-          alreadyMoved = true;
-        }
-      }
-      if (map.fields[map.playerY][map.playerX - 1].getEnabled() == true) {
-        if (alreadyMoved == false) {
-          saveMove(MOVE_LEFT);
-          alreadyMoved = true;
-        }
-      }
-      if (map.fields[map.playerY - 1][map.playerX].getEnabled() == true) {
-        if (alreadyMoved == false) {
-          saveMove(MOVE_UP);
-          alreadyMoved = true;
-        }
-      }
-      // 2 phase
-      switch (map.startEvent()) {
-        case MAP_EVENT_EXIT: {
-          EndScreen end = new EndScreen(gameWindow, 1);
-          try {
-            replay.saveEnd(true);
-          } catch (IOException inputError) {
-            inputError.printStackTrace();
-          }
-          return;
-        }
-        case MAP_EVENT_BATTLE: {
-          map.player.getDamage(BOT_MONSTER_DAMAGE);
-          map.player.addExperience(BOT_EXPERIENCE_GAIN);
-          saveAction();
-          break;
-        }
-        case MAP_EVENT_TRAP: {
-          map.player.getDamage(BOT_TRAP_DAMAGE);
-          saveAction();
-          break;
-        }
-        case MAP_EVENT_TREASURE: {
-          map.player.addScore(BOT_SCORE_GAIN);
-          saveAction();
-          break;
-        }
-        case MAP_EVENT_EVENT: {
-          map.player.addScore(BOT_SCORE_GAIN);
-          saveAction();
-          break;
-        }
-      }
-      if (map.player.getStat(PLAYER_STAT_CURRENT_HP) <= 0) {
-        EndScreen end = new EndScreen(gameWindow, 0);// fail
-        try {
-          replay.saveEnd(false);
-        } catch (IOException inputError) {
-          inputError.printStackTrace();
-        }
-        return;
-      }
-      botMovesNumber++;
-      if (maximumMoves >= BOT_MAXIMUM_MOVES) {
-        map.player.addScore(-BOT_MAXIMUM_MOVES);
-        EndScreen end = new EndScreen(gameWindow, 0);// fail
-        try {
-          replay.saveEnd(false);
-        } catch (IOException inputError) {
-          inputError.printStackTrace();
-        }
-        return;
-      }
-    }
-
-    EndScreen end = new EndScreen(gameWindow, 0);
-    return;
   }
 
   void drawMap() {
@@ -497,23 +278,8 @@ public class MiddlePanel implements Defines, Runnable {
 
   }
 
-  void saveMove(int move) {
-    if (map.changePlayerPos(move)) {
-      try {
-        replay.saveMove(move);
-      } catch (IOException inputError) {
-        inputError.printStackTrace();
-      }
-    }
+  void movePlayer(int move) {
+      map.changePlayerPos(move);
   }
 
-  void saveAction() {
-    int tempHP = map.player.getStat(PLAYER_STAT_CURRENT_HP);
-    int tempScore = map.player.getStat(PLAYER_STAT_SCORE);
-    try {
-      replay.saveAction(tempHP, tempScore);
-    } catch (IOException inputError) {
-      inputError.printStackTrace();
-    }
-  }
 }

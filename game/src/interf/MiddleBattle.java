@@ -42,11 +42,6 @@ public class MiddleBattle implements Defines {
     if (exitFlag == -1) {
       gameWindow.left.refresh(gameWindow);
       EndScreen end = new EndScreen(gameWindow, 0);
-      try {
-        gameWindow.middle.replay.saveEnd(false);
-      } catch (IOException inputError) {
-        inputError.printStackTrace();
-      }
       return;
     }
     VBox battleBox = new VBox();

@@ -132,7 +132,7 @@ public class LeftPanel implements Defines {
     // Score
     String score = Integer.toString(gameWindow.middle.map.player.getStat(PLAYER_STAT_SCORE));
     statScoreText.insertText(0, score);
-    statScoreText.setPrefSize(STAT_SMALL_TEXT_SIZE_X, LEFT_PANEL_ELEMENTS_SIZE_Y);
+    statScoreText.setPrefSize(STAT_LARGE_TEXT_SIZE_X, LEFT_PANEL_ELEMENTS_SIZE_Y);
     statScoreText.setDisable(true);
   }
 }

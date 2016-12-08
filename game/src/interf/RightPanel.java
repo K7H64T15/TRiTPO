@@ -22,7 +22,6 @@ public class RightPanel implements Defines {
     menuButton.setOnAction(new EventHandler<ActionEvent>() {
       public void handle(ActionEvent event) {
         gameWindow.middle.moveFlag = false;
-        gameWindow.middle.replayFlag = false;
         rightPanel.getChildren().remove(menu);
         rightPanel.getChildren().add(menuMenu);
       }
@@ -34,25 +33,8 @@ public class RightPanel implements Defines {
     itemsButton.setText("Инвентарь");
     itemsButton.setPrefSize(RIGHT_BUTTON_SIZE_X, RIGHT_BUTTON_SIZE_Y);
 
-    Button autoButton = new Button();
-    autoButton.setText("Авто");
-    autoButton.setPrefSize(RIGHT_BUTTON_SIZE_X, RIGHT_BUTTON_SIZE_Y);
-    autoButton.setOnAction(new EventHandler<ActionEvent>() {
-      public void handle(ActionEvent event) {
-        if (gameWindow.autoPlayFlag == true) {
-          gameWindow.autoPlayFlag = false;
-          gameWindow.middle.moveFlag = true;
-        } else {
-          if (gameWindow.middle.replayFlag != true) {
-            gameWindow.autoPlayFlag = true;
-            gameWindow.middle.moveFlag = false;
-            gameWindow.middle.autoPlay(gameWindow);
-          }
-        }
-      }
-    });
 
-    menu.getChildren().addAll(menuButton, playerButton, itemsButton, autoButton);
+    menu.getChildren().addAll(menuButton, playerButton, itemsButton);
     menu.setPadding(new Insets(ELEMENTS_INSETS_TOP, ELEMENTS_INSETS_RIGHT, ELEMENTS_INSETS_BOTTOM,
         ELEMENTS_INSETS_LEFT));
     menu.setSpacing(ELEMENT_LARGE_SPACING);
@@ -67,7 +49,6 @@ public class RightPanel implements Defines {
     backButton.setOnAction(new EventHandler<ActionEvent>() {
       public void handle(ActionEvent event) {
         gameWindow.middle.moveFlag = true;
-        gameWindow.middle.replayFlag = true;
         rightPanel.getChildren().remove(menuMenu);
         rightPanel.getChildren().add(menu);
       }
